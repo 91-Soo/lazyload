@@ -128,10 +128,6 @@ var LazyLoadElement = (function() {
       }
     }
   };
-  LazyLoadElement.prototype.loadError = function(element) {
-    element.setAttribute('src', null);
-    element.removeEventListener('error', this.loadError);
-  };
-
+  
   return LazyLoadElement;
 }());
