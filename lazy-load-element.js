@@ -25,18 +25,17 @@ var LazyLoadElement = (function() {
   }
   LazyLoadElement.prototype.init = function(options, callbacks) {
     this.debug = false;
-    this.isDisposable = null;
-    this.observer = null;
     this.config = {
       root: options && options.root ? options.root : null,
       rootMargin: options && options.rootMargin ? options.rootMargin : '0px',
       threshold: options && options.threshold ? options.threshold : 0.01
     };
+    this.isDisposable = options && undefined !== options.isDisposable ? options.isDisposable : true;
     this.callbacks = {
-      load: null,
-      call: null,
-      error: null
-    };
+      load: callbacks ? callbacks.load : null,
+      call: callbacks ? callbacks.call : null,
+      error: callbacks ? callbacks.error : null
+    }
     this.stateCodes = {
       NOTSUPPORT: {
         code: 0,
@@ -55,12 +54,6 @@ var LazyLoadElement = (function() {
         msg: 'LazyLoadElement call'
       }
     };
-    this.callbacks = {
-      load: callbacks ? callbacks.load : null,
-      call: callbacks ? callbacks.call : null,
-      error: callbacks ? callbacks.error : null
-    }
-    this.isDisposable = options && undefined !== options.isDisposable ? options.isDisposable : true;
   },
   LazyLoadElement.prototype.addObserve = function(elements) {
     if (!('IntersectionObserver' in window)) {
