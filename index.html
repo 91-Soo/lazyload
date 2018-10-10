@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>lazy load test</title>
+</head>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  .position-fixed {
+    position: fixed;
+  }
+
+  .view-wrap {
+    height: 30px;
+    border-bottom: #000 1px solid;
+    z-index: 1;
+  }
+
+  .view-wrap > div {
+    height: 100%;
+  }
+
+  .wrap {
+    position: relative;
+    top: 31px;
+  }
+
+  .box {
+    width: 100%;
+    height: 400px;
+  }
+
+  .bg-gray {
+    background-color: #efefef;
+  }
+
+  .border-default {
+    border: 2px #000 solid;
+  }
+
+  .display-flex {
+    display: flex;
+  }
+
+  .width-1 {
+    width: 100%;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+</style>
+<body>
+  <div id="view-wrap" class="view-wrap display-flex width-1 position-fixed">
+    <div class="width-1 text-center" data-idx="1">1</div>
+    <div class="width-1 text-center" data-idx="2">2</div>
+    <div class="width-1 text-center" data-idx="3">3</div>
+    <div class="width-1 text-center" data-idx="4">4</div>
+    <div class="width-1 text-center" data-idx="5">5</div>
+    <div class="width-1 text-center" data-idx="6">6</div>
+    <div class="width-1 text-center" data-idx="7">7</div>
+  </div>
+  <div class="wrap">
+    <div class="box" data-lazy-class="border-default" data-idx="1" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="2" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="3" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="4" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="5" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="6" lazy-load></div>
+    <div class="box bg-gray" data-lazy-class="border-default" data-idx="7" lazy-load></div>
+    <script src="lazy-load-element.js"></script>
+  </div>
+  <script>
+    (function(w, d) {
+      w.onload = function() {
+        var lazyloadElement = new LazyLoadElement(null, null, {
+          load: function(state, result){
+            var idx = result.element.getAttribute('data-idx');
+            d.getElementById('view-wrap').querySelector('[data-idx="' + idx + '"]').style.background = '#22741C';
+          }
+        });
+      }
+    }(window, document));
+  </script>
+</body>
+</html>
