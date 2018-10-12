@@ -12,7 +12,7 @@ var lazyloadCallback = {
     console.log('state', state);
     console.log('result', result);
   },
-  error: (state: LazyLoadElementState, result: LazyLoadElementResult): void => {
+  error: (state, result): void => {
     console.log('state', state);
     console.log('result', result);
   }
