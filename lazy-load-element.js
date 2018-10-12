@@ -73,7 +73,7 @@ var LazyLoadElement = (function() {
       this.observer = new IntersectionObserver(function(entries, config) {
         entries.forEach(function(entry) {
           if (0 < entry.intersectionRatio) {
-            this.preLoad(entry, this.observer);
+            this.preLoad(entry.target, entry, this.observer);
           }
 
           if (this.callbacks && this.callbacks.call) {
@@ -91,9 +91,7 @@ var LazyLoadElement = (function() {
       }.bind(this));
     }
   };
-  LazyLoadElement.prototype.preLoad = function(entry, observer) {
-    var element = entry.target;
-
+  LazyLoadElement.prototype.preLoad = function(element, entry, observer) {
     if (!element.getAttribute('lazy-load-loaded')) {
       [].forEach.call(element.attributes, (function(attribute, index) {
         if (attribute.nodeName.match(/data-lazy/)) {
