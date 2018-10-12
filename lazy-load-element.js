@@ -12,14 +12,15 @@ var LazyLoadElement = (function() {
 
   function LazyLoadElement(element, options, callbacks) {
     this.init(options, callbacks);
-    var elements = element ? element.querySelectorAll('[lazy-load]:not([lazy-load-loaded])') : document.querySelectorAll('[lazy-load]:not([lazy-load-loaded])');
 
-    if (elements.length) {
+    var elements = this.makeElementNodeList(element);
+
+    if(elements.length) {
       this.addObserve(elements);
     }
     else {
-      if (this.callbacks && this.callbacks.error) {
-        this.callbacks.error(this.stateCodes['ERRORELEMENT']);
+      if(this.callbacks && this.callbacks.error) {
+        this.callbacks.error(this.stateCodes['ERRORELEMENT'], this.makeResult(null, null, null));
       }
     }
   }
@@ -55,12 +56,34 @@ var LazyLoadElement = (function() {
       }
     };
   },
-  LazyLoadElement.prototype.addObserve = function(elements) {
-    if (!('IntersectionObserver' in window)) {
-      if (this.debug) console.log('IntersectionObserver not support');
+  LazyLoadElement.prototype.makeElementNodeList = function(element) {
+    var elements = null;
 
-      if (this.callbacks && this.callbacks.error) {
-        this.callbacks.error(this.stateCodes['NOTSUPPORT']);
+    if(element) {
+      if(element instanceof Element) {
+        elements = element.querySelectorAll('[lazy-load]:not([lazy-load-loaded])');
+      }
+      else if(element instanceof NodeList) {
+        elements = element;
+      }
+      else {
+        if(this.callbacks && this.callbacks.error) {
+          this.callbacks.error(this.stateCodes['ERRORELEMENT'], this.makeResult(null, null, null));
+        }
+      }
+    }
+    else {
+      elements = document.querySelectorAll('[lazy-load]:not([lazy-load-loaded])');
+    }
+
+    return elements;
+  },
+  LazyLoadElement.prototype.addObserve = function(elements) {
+    if(!('IntersectionObserver' in window)) {
+      if(this.debug) console.log('IntersectionObserver not support');
+
+      if(this.callbacks && this.callbacks.error) {
+        this.callbacks.error(this.stateCodes['NOTSUPPORT'], this.makeResult(null, null, null));
       }
 
       [].forEach.call(elements, function(element) {
@@ -68,21 +91,21 @@ var LazyLoadElement = (function() {
       }.bind(this));
     }
     else {
-      if (this.debug) console.log('IntersectionObserver support');
+      if(this.debug) console.log('IntersectionObserver support');
 
-      this.observer = new IntersectionObserver(function(entries, config) {
+      this.observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
-          if (0 < entry.intersectionRatio) {
+          if(0 < entry.intersectionRatio) {
             this.preLoad(entry.target, entry, this.observer);
           }
 
-          if (this.callbacks && this.callbacks.call) {
-            this.callbacks.call(this.stateCodes['CALL'], { element: entry.target, isIntersecting: entry.isIntersecting, intersectionRatio: entry.intersectionRatio });
+          if(this.callbacks && this.callbacks.call) {
+            this.callbacks.call(this.stateCodes['CALL'], this.makeResult(entry.target, null, entry));
           }
         }.bind(this));
       }.bind(this), this.config);
 
-      [].forEach.call(elements, function(element, index) {
+      [].forEach.call(elements, function(element) {
         // samsung browser error
         setTimeout(function() {
           element.setAttribute('lazy-load-unloaded', '');
@@ -92,21 +115,30 @@ var LazyLoadElement = (function() {
     }
   };
   LazyLoadElement.prototype.preLoad = function(element, entry, observer) {
-    if (!element.getAttribute('lazy-load-loaded')) {
-      [].forEach.call(element.attributes, (function(attribute, index) {
-        if (attribute.nodeName.match(/data-lazy/)) {
+    if(!element.getAttribute('lazy-load-loaded')) {
+      [].forEach.call(element.attributes, (function(attribute) {
+        if(attribute.nodeName.match(/data-lazy/)) {
           var inputAttribute = attribute.nodeName.replace(/data-lazy-/, '');
+          var inputValue = element.getAttribute(attribute.nodeName);
 
-          if ('class' == inputAttribute) {
-            element.classList.add(element.getAttribute(attribute.nodeName));
-          }
-          else {
-            element.onerror = function(e) { element.onerror = null; element.removeAttribute('src'); };
-            element.setAttribute(inputAttribute, element.getAttribute(attribute.nodeName));
+          switch(inputAttribute) {
+            case "class":
+              element.classList.add(inputValue);
+            break;
+            case "style":
+              element.setAttribute(inputAttribute, (element.getAttribute('style') || '') + inputValue);
+            break;
+            case "src":
+              element.onerror = function () { element.onerror = null; element.removeAttribute('src'); };
+              element.setAttribute(inputAttribute, inputValue);
+            break;
+            default:
+              element.setAttribute(inputAttribute, inputValue);
+            break;
           }
 
-          if (this.callbacks && this.callbacks.load) {
-            this.callbacks.load(this.stateCodes['LOAD'], { element: element, attr: inputAttribute, isIntersecting: entry.isIntersecting, intersectionRatio: entry.intersectionRatio });
+          if(this.callbacks && this.callbacks.load) {
+            this.callbacks.load(this.stateCodes['LOAD'], this.makeResult(element, inputAttribute, entry));
           }
         }
       }).bind(this));
@@ -114,11 +146,19 @@ var LazyLoadElement = (function() {
       element.removeAttribute('lazy-load-unloaded');
       element.setAttribute('lazy-load-loaded', '');
 
-      if (observer && this.isDisposable) {
+      if(observer && this.isDisposable) {
         observer.unobserve(element);
       }
     }
   };
-  
+  LazyLoadElement.prototype.makeResult = function(element, attr, entry) {
+    return {
+      element: element,
+      attr: attr,
+      isIntersecting: entry ? entry.isIntersecting : null,
+      intersectionRatio: entry ? entry.intersectionRatio : null,
+    }
+  };
+
   return LazyLoadElement;
 }());
